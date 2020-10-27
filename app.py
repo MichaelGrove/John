@@ -6,6 +6,7 @@ class JohnState(Enum):
     WAITING_CALL = 1
     LISTENING_ACTION = 2
 
+
 class John:
 
     state = JohnState.DEFAULT
@@ -21,53 +22,44 @@ class John:
         self.recognizer = recognizer
         self.microphone = microphone
 
+
     def listen(self):
         print("Greetings! I'm John and I'm at your service.")
-        self.state = JohnState.WAITING_CALL
         while True:
             if self.state == JohnState.DEFAULT:
-                break
-
-            response = self.recognize_speech_from_mic()
-            self.handleResponse(response)
+                self.recognize_speech_from_mic()
 
 
-    def handleResponse(self, response):
-        transcription = response['transcription']
+    def handleResponse(self, recognizer, audio):
+        try:
+            self.handleTranscription(recognizer.recognize_google(audio))
+        except sr.UnknownValueError:
+            print("I did not understand. Please repeat.")
+        except sr.RequestError:
+            print("It would appear that my brain is fried. I can not handle your request.")
+        
+
+    def handleTranscription(self, transcription):
+        print(transcription)
         if (transcription == None):
-            self.handleNoTranscription()
-        elif (transcription == 'hey John'):
+            pass
+        if self.state == JohnState.WAITING_CALL and transcription == 'hey John':
             self.state = JohnState.LISTENING_ACTION
             print('Hello, Mikael. What can I do for you?')
-        else:
-            self.state = JohnState.WAITING_CALL
+        elif self.state == JohnState.LISTENING_ACTION:
             print('You told me this: {0}'.format(transcription))
-        
-    def handleNoTranscription(self):
-        if (self.state == JohnState.WAITING_CALL):
-            print("Would you please repeat what you said? I couldn't catch that.")
+            self.state = JohnState.WAITING_CALL
+
 
     def recognize_speech_from_mic(self):
-
+        self.state = JohnState.WAITING_CALL
         with self.microphone as source:
             self.recognizer.adjust_for_ambient_noise(source)
-            audio = self.recognizer.listen(source)
-        
-        response = {
-            'success': True,
-            'error': None,
-            'transcription': None
-        }
+        self.recognizer.listen_in_background(
+            self.microphone,
+            self.handleResponse
+        )
 
-        try:
-            response['transcription'] = self.recognizer.recognize_google(audio)
-        except sr.RequestError:
-            response['success'] = False
-            response['error'] = 'API unavailable'
-        except sr.UnknownValueError:
-            response['error'] = 'Unable to recognize speech'
-
-        return response
 
 if __name__ == "__main__":
     r = sr.Recognizer()
