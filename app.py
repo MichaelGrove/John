@@ -40,7 +40,6 @@ class John:
         
 
     def handleTranscription(self, transcription):
-        print(transcription)
         if (transcription == None):
             pass
         if self.state == JohnState.WAITING_CALL and transcription == 'hey John':
