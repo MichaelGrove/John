@@ -44,7 +44,7 @@ class John:
             pass
         if self.state == JohnState.WAITING_CALL and transcription == 'hey John':
             self.state = JohnState.LISTENING_ACTION
-            print('Hello, Mikael. What can I do for you?')
+            print('Hello. What can I do for you?')
         elif self.state == JohnState.LISTENING_ACTION:
             print('You told me this: {0}'.format(transcription))
             self.state = JohnState.WAITING_CALL
